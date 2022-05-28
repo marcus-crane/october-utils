@@ -1,0 +1,5 @@
+KoboReader.sqlite
+.DS_Store
+.idea
+.vscode
+venv
