@@ -1,6 +1,9 @@
 import sqlite3
+import os
 
 from faker import Faker
+
+fake = Faker()
 
 CONTENT_SCHEMA = '''
 CREATE TABLE content
@@ -23,6 +26,8 @@ ChapterProgress REAL NOT NULL DEFAULT 0,
 DateCreated TEXT)
 '''
 
+if os.path.exists("KoboReader.sqlite"):
+    os.remove("KoboReader.sqlite")
 conn = sqlite3.connect("KoboReader.sqlite")
 
 cur = conn.cursor()
@@ -30,6 +35,57 @@ cur = conn.cursor()
 cur.execute(CONTENT_SCHEMA)
 cur.execute(BOOKMARK_SCHEMA)
 
+conn.commit()
+
+CONTENT = []
+BOOKMARKS = []
+
+VOLUME_INDEX = -1
+CONTENT_TYPE = 6
+
+GEN_NUM_BOOKS = 20000
+GEN_NUM_BOOKMARKS_PER_BOOK = 100
+
+def gen_title():
+    title = fake.catch_phrase()
+    subtitle = fake.sentence(nb_words=15, variable_nb_words=True).replace('.', '')
+    return f"{title}: {subtitle}"
+
+def gen_volume_id(book):
+    title = book[2]
+    author = book[3]
+    author_bits = book[3].split(' ')
+    author_bits.reverse()
+    author_reversed = ', '.join(author_bits)
+    return "file:///mnt/onboard/{0}/{1} - {2}.kepub.epub".format(author_reversed, title.replace(":", ""), author)
+
+for _ in range(GEN_NUM_BOOKS):
+    book = (
+        fake.uuid4(),
+        CONTENT_TYPE,
+        gen_title(),
+        fake.name(),
+        0,
+        VOLUME_INDEX,
+    )
+    CONTENT.append(book)
+
+for book in CONTENT:
+    bookmark = (
+        fake.uuid4(),
+        gen_volume_id(book),
+        book[0],
+        fake.paragraph(nb_sentences=4, variable_nb_sentences=True),
+        fake.paragraph(nb_sentences=1, variable_nb_sentences=True),
+        0,
+        "2021-04-24T05:07:29.943"
+    )
+    BOOKMARKS.append(bookmark)
+
+cur.executemany("INSERT INTO Content VALUES (?, ?, ?, ?, ?, ?)", CONTENT)
+conn.commit()
+
+cur.executemany("INSERT INTO Bookmark VALUES (?, ?, ?, ? ,?, ? ,?)", BOOKMARKS)
 conn.commit()
 
 conn.close()
