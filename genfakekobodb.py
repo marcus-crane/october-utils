@@ -1,5 +1,6 @@
-import sqlite3
 import os
+import random
+import sqlite3
 
 from faker import Faker
 
@@ -43,8 +44,8 @@ BOOKMARKS = []
 VOLUME_INDEX = -1
 CONTENT_TYPE = 6
 
-GEN_NUM_BOOKS = 20000
-GEN_NUM_BOOKMARKS_PER_BOOK = 100
+GEN_NUM_BOOKS = 3456
+GEN_NUM_BOOKMARKS_PER_BOOK = 43
 
 def gen_title():
     title = fake.catch_phrase()
@@ -59,28 +60,32 @@ def gen_volume_id(book):
     author_reversed = ', '.join(author_bits)
     return "file:///mnt/onboard/{0}/{1} - {2}.kepub.epub".format(author_reversed, title.replace(":", ""), author)
 
+def gen_read_percent():
+    return random.randint(0, 100)
+
 for _ in range(GEN_NUM_BOOKS):
     book = (
         fake.uuid4(),
         CONTENT_TYPE,
         gen_title(),
         fake.name(),
-        0,
+        gen_read_percent(),
         VOLUME_INDEX,
     )
     CONTENT.append(book)
 
 for book in CONTENT:
-    bookmark = (
-        fake.uuid4(),
-        gen_volume_id(book),
-        book[0],
-        fake.paragraph(nb_sentences=4, variable_nb_sentences=True),
-        fake.paragraph(nb_sentences=1, variable_nb_sentences=True),
-        0,
-        "2021-04-24T05:07:29.943"
-    )
-    BOOKMARKS.append(bookmark)
+    for _ in range (GEN_NUM_BOOKMARKS_PER_BOOK):
+        bookmark = (
+            fake.uuid4(),
+            gen_volume_id(book),
+            book[0],
+            fake.paragraph(nb_sentences=4, variable_nb_sentences=True),
+            fake.paragraph(nb_sentences=1, variable_nb_sentences=True),
+            32,
+            "2021-04-24T05:07:29.943"
+        )
+        BOOKMARKS.append(bookmark)
 
 cur.executemany("INSERT INTO Content VALUES (?, ?, ?, ?, ?, ?)", CONTENT)
 conn.commit()
