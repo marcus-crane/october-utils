@@ -44,8 +44,8 @@ BOOKMARKS = []
 VOLUME_INDEX = -1
 CONTENT_TYPE = 6
 
-GEN_NUM_BOOKS = 3456
-GEN_NUM_BOOKMARKS_PER_BOOK = 43
+GEN_NUM_BOOKS = 50
+GEN_NUM_BOOKMARKS_PER_BOOK = 30
 
 def gen_title():
     title = fake.catch_phrase()
